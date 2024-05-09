@@ -1,7 +1,6 @@
 import os
 from typing import Tuple, List
 import logging
-import string
 from dotenv import load_dotenv
 import pandas as pd
 
@@ -24,9 +23,7 @@ class RawDataPreprocessor:
 
     def __get_text_entities(self, file_path: str) -> Tuple[List[str], List[str]]:
         df = pd.read_csv(file_path)
-        custom_punctuation = string.punctuation + '«—»•'
-        translator = str.maketrans('', '', custom_punctuation)
-        texts = [text.translate(translator).split() for text in df['1'].tolist()]
+        texts = [text.split() for text in df['1'].tolist()]
         entities = [text.split() for text in df['0'].tolist()]
         return texts, entities
 
@@ -50,7 +47,8 @@ class RawDataPreprocessor:
         texts_str = [' '.join(text) for text in texts]
 
         make_file(self.processed_path, os.path.join(stage, os.getenv('TEXT_FILE_NAME')), '\n'.join(texts_str))
-        make_file(self.processed_path, os.path.join(stage, os.getenv('ENTITIES_FILE_NAME')), '\n'.join(entities_labels_str))
+        make_file(self.processed_path, os.path.join(stage, os.getenv('ENTITIES_FILE_NAME')),
+                  '\n'.join(entities_labels_str))
 
         return texts, entities_labels
 

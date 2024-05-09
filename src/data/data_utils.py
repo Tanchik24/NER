@@ -8,7 +8,7 @@ def make_file(dir: str, path: str, data: str) -> None:
 
 
 def get_unique_entities(annot_entities: List[str]) -> List[str]:
-    entities = list({word for phrase in annot_entities for word in phrase})
+    entities = ['PAD'] + list({word for phrase in annot_entities for word in phrase})
     entities.append('UNK')
     return entities
 
