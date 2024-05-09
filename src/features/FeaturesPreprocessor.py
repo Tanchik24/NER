@@ -2,10 +2,7 @@ import os
 from dotenv import load_dotenv
 from typing import List, Tuple
 import logging
-
-from transformers import BertTokenizer
 from src.features.Features import Features
-from src.data.RawDataPreprocessor import raw_data_preprocessor
 import torch
 
 logger = logging.getLogger(__name__)
@@ -14,6 +11,7 @@ load_dotenv()
 
 class FeaturesPreprocessor:
     def __init__(self, tokenizer):
+        self.tokenizer = tokenizer
         self.cls_token: str = tokenizer.cls_token
         self.sep_token: str = tokenizer.sep_token
         self.unk_token: str = tokenizer.unk_token
@@ -59,7 +57,7 @@ class FeaturesPreprocessor:
             tokens = []
             entity_labels_ids = []
             for word, entity in zip(text, entities):
-                word_tokens = tokenizer.tokenize(word)
+                word_tokens = self.tokenizer.tokenize(word)
                 if not word_tokens:
                     word_tokens = [self.unk_token]
                 tokens.extend(word_tokens)
@@ -69,7 +67,7 @@ class FeaturesPreprocessor:
             tokens, entity_labels_ids = self.cut_length(tokens, entity_labels_ids)
             tokens, entity_labels_ids, token_type_ids = self.add_sep_token(tokens, entity_labels_ids)
             tokens, entity_labels_ids, token_type_ids = self.add_cls_token(tokens, entity_labels_ids, token_type_ids)
-            input_ids = tokenizer.convert_tokens_to_ids(tokens)
+            input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
             input_ids, attention_mask, token_type_ids, entity_labels_ids = self.add_attention_mask(input_ids,
                                                                                                    token_type_ids,
                                                                                                    entity_labels_ids)
@@ -89,15 +87,7 @@ class FeaturesPreprocessor:
                 token_type_ids=token_type_ids,
                 entity_labels_ids=entity_labels_ids))
 
-        os.makedirs(os.getenv('PREPARED_DATA_FOLDER'))
         torch.save(features, os.path.join(os.getenv('PREPARED_DATA_FOLDER'), stage))
         return features
 
 
-model_dir = '/Users/tanchik/Desktop/DFFJointBert/weights/DFFSearch'
-tokenizer = BertTokenizer.from_pretrained(model_dir)
-
-texts, entities = raw_data_preprocessor.preprocess_raw_data('train')
-
-fp = FeaturesPreprocessor(tokenizer)
-fp.get_feautures(texts, entities, 'train')
