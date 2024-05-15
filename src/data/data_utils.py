@@ -8,15 +8,16 @@ def make_file(dir: str, path: str, data: str) -> None:
 
 
 def get_unique_entities(annot_entities: List[str]) -> List[str]:
-    entities = ['PAD'] + list({word for phrase in annot_entities for word in phrase})
-    entities.append('UNK')
+    entities = list({word for phrase in annot_entities for word in phrase})
     return entities
 
 
-def created_processed_folders(base_path: str) -> None:
-    train_path = os.path.join(base_path, os.getenv('TRAIN_FOLDER'))
-    test_path = os.path.join(base_path, os.getenv('TEST_FOLDER'))
+def created_folders(path: str) -> None:
+    if not os.path.exists(path):
+        os.makedirs(path)
 
-    for path in [base_path, train_path, test_path]:
-        if not os.path.exists(path):
-            os.makedirs(path)
+
+def get_data_from_file(path: str) -> list[str]:
+    with open(path, 'r') as f:
+        data = [line.replace('\n', '') for line in f.readlines()]
+        return data
