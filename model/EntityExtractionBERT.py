@@ -12,11 +12,18 @@ class EntityClassifier(nn.Module):
     def __init__(self, input_dim: int, num_entity_labels: int, dropout_rate: float = 0.):
         super(EntityClassifier, self).__init__()
         self.dropout = nn.Dropout(dropout_rate)
-        self.linear = nn.Linear(input_dim, num_entity_labels)
+        self.linear1 = nn.Linear(input_dim, 256)
+        self.activation = nn.ReLU()
+        self.layer_norm = nn.LayerNorm(256)
+        self.linear2 = nn.Linear(256, num_entity_labels)
 
     def forward(self, x):
         x = self.dropout(x)
-        return self.linear(x)
+        x = self.linear1(x)
+        x = self.activation(x)
+        x = self.layer_norm(x)
+        x = self.linear2(x)
+        return x
 
 
 class EntityExtractionBERT(BertPreTrainedModel):

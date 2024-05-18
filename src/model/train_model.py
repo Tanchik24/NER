@@ -7,10 +7,11 @@ from sklearn.metrics import classification_report
 
 import torch
 from torch import nn
-from transformers import BertConfig, AdamW, get_linear_schedule_with_warmup, BertTokenizer
+from transformers import BertConfig, AdamW, get_linear_schedule_with_warmup
 from model.model_utils import get_entities
 from model.EntityExtractionBERT import EntityExtractionBERT
 from src.model.train_utils import get_metrics_dict
+from src.visualization.visualize import plot_losses
 
 load_dotenv()
 
@@ -66,6 +67,8 @@ class Trainer:
     def train(self):
         self.model.zero_grad()
         train_iterator = trange(int(os.environ.get('NUM_TRAIN_EPOCHS')), desc="Epoch")
+        train_loss_list = []
+        valid_loss_list = []
         for _ in train_iterator:
             epoch_iterator = tqdm(self.train_dataloader, desc="Iteration")
             train_batch_loss = []
@@ -111,6 +114,10 @@ class Trainer:
                     if int(os.environ.get('SAVE_STEPS')) > 0 and self.global_step % int(
                             os.environ.get('SAVE_STEPS')) == 0:
                         self.save_model()
+            train_loss_list.append(np.mean(train_batch_loss))
+            valid_loss_list.append(np.mean(valid_batch_loss))
+
+        plot_losses(train_loss_list, valid_loss_list)
 
     def evaluate(self):
         entity_preds = None
